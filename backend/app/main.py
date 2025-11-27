@@ -272,6 +272,9 @@ async def process_query(request: QueryRequest):
             if not season:
                 season = "2023-24"  # Default to most recent season
             comparison = queries.compare_teams(team1, team2, season, True, last_n)
+            # Ensure last_n is included in response
+            if "error" not in comparison:
+                comparison["last_n"] = last_n
             data = comparison
         
         elif query_type == "error":
