@@ -20,12 +20,30 @@ def get_db_connection():
     return conn
 
 
+def normalize_season(season: str) -> str:
+    """Normalize season format (e.g., '2022-2023' -> '2022-23')."""
+    if '-' in season:
+        parts = season.split('-')
+        if len(parts) == 2:
+            start = parts[0].strip()
+            end = parts[1].strip()
+            # Convert full year to short (e.g., 2023 -> 23)
+            if len(end) == 4:
+                end = end[2:]
+            return f"{start}-{end}"
+    return season
+
+
 def get_player_stats(player_name: str, season: str) -> Optional[Dict[str, Any]]:
     """Get player stats for a specific season."""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
+        # Normalize season format
+        normalized_season = normalize_season(season)
+        
+        # Case-insensitive player name search
         cursor.execute("""
             SELECT 
                 p.player_id,
@@ -39,8 +57,8 @@ def get_player_stats(player_name: str, season: str) -> Optional[Dict[str, Any]]:
             JOIN player_stats ps ON p.player_id = ps.player_id
             JOIN seasons s ON ps.season_id = s.season_id
             LEFT JOIN teams t ON ps.team_id = t.team_id
-            WHERE p.name = ? AND s.season = ?
-        """, (player_name, season))
+            WHERE LOWER(p.name) = LOWER(?) AND s.season = ?
+        """, (player_name.strip(), normalized_season))
         
         row = cursor.fetchone()
         if row:
@@ -52,23 +70,20 @@ def get_player_stats(player_name: str, season: str) -> Optional[Dict[str, Any]]:
 
 def compare_players(player1: str, player2: str, season: str) -> Dict[str, Any]:
     """Compare two players' stats for a specific season."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    # Normalize season format
+    normalized_season = normalize_season(season)
     
-    try:
-        # Get player1 stats
-        player1_stats = get_player_stats(player1, season)
-        
-        # Get player2 stats
-        player2_stats = get_player_stats(player2, season)
-        
-        return {
-            "player1": player1_stats,
-            "player2": player2_stats,
-            "season": season
-        }
-    finally:
-        conn.close()
+    # Get player1 stats
+    player1_stats = get_player_stats(player1, normalized_season)
+    
+    # Get player2 stats
+    player2_stats = get_player_stats(player2, normalized_season)
+    
+    return {
+        "player1": player1_stats,
+        "player2": player2_stats,
+        "season": normalized_season
+    }
 
 
 def get_head_to_head_game_logs(
@@ -82,18 +97,21 @@ def get_head_to_head_game_logs(
     cursor = conn.cursor()
     
     try:
-        # Get player IDs
-        cursor.execute("SELECT player_id FROM players WHERE name = ?", (player1,))
+        # Normalize season if provided
+        normalized_season = normalize_season(season) if season else None
+        
+        # Get player IDs (case-insensitive)
+        cursor.execute("SELECT player_id FROM players WHERE LOWER(name) = LOWER(?)", (player1.strip(),))
         player1_row = cursor.fetchone()
         if not player1_row:
             return []
-        player1_id = player1_row["player_id"]
+        player1_id = player1_row[0]
         
-        cursor.execute("SELECT player_id FROM players WHERE name = ?", (player2,))
+        cursor.execute("SELECT player_id FROM players WHERE LOWER(name) = LOWER(?)", (player2.strip(),))
         player2_row = cursor.fetchone()
         if not player2_row:
             return []
-        player2_id = player2_row["player_id"]
+        player2_id = player2_row[0]
         
         # Build query
         query = """
@@ -129,9 +147,9 @@ def get_head_to_head_game_logs(
         
         params = [player1_id, player2_id]
         
-        if season:
+        if normalized_season:
             query += " AND s.season = ?"
-            params.append(season)
+            params.append(normalized_season)
         
         query += " ORDER BY g.game_date DESC"
         
@@ -159,32 +177,35 @@ def compare_teams(
     cursor = conn.cursor()
     
     try:
-        # Get team IDs
-        cursor.execute("SELECT team_id FROM teams WHERE team_abbrev = ? OR team_name = ?", (team1, team1))
+        # Normalize season format
+        normalized_season = normalize_season(season)
+        
+        # Get team IDs (case-insensitive)
+        cursor.execute("SELECT team_id FROM teams WHERE LOWER(team_abbrev) = LOWER(?) OR LOWER(team_name) = LOWER(?)", (team1.strip(), team1.strip()))
         team1_row = cursor.fetchone()
         if not team1_row:
             return {"error": f"Team {team1} not found"}
-        team1_id = team1_row["team_id"]
+        team1_id = team1_row[0]
         
-        cursor.execute("SELECT team_id FROM teams WHERE team_abbrev = ? OR team_name = ?", (team2, team2))
+        cursor.execute("SELECT team_id FROM teams WHERE LOWER(team_abbrev) = LOWER(?) OR LOWER(team_name) = LOWER(?)", (team2.strip(), team2.strip()))
         team2_row = cursor.fetchone()
         if not team2_row:
             return {"error": f"Team {team2} not found"}
-        team2_id = team2_row["team_id"]
+        team2_id = team2_row[0]
         
         # Get season ID
-        cursor.execute("SELECT season_id FROM seasons WHERE season = ?", (season,))
+        cursor.execute("SELECT season_id FROM seasons WHERE season = ?", (normalized_season,))
         season_row = cursor.fetchone()
         if not season_row:
             return {"error": f"Season {season} not found"}
-        season_id = season_row["season_id"]
+        season_id = season_row[0]
         
         # Get aggregate stats for each team (from player_stats)
         # This is a simplified version - in production, you'd aggregate from game_stats
         result = {
             "team1": team1,
             "team2": team2,
-            "season": season,
+            "season": normalized_season,
             "game_logs": []
         }
         
