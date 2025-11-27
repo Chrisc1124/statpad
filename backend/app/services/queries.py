@@ -262,7 +262,9 @@ def compare_teams(
                     g.away_score,
                     g.home_win,
                     ht.team_name as home_team_name,
-                    at.team_name as away_team_name
+                    ht.team_abbrev as home_team_abbrev,
+                    at.team_name as away_team_name,
+                    at.team_abbrev as away_team_abbrev
                 FROM games g
                 JOIN teams ht ON g.home_team_id = ht.team_id
                 JOIN teams at ON g.away_team_id = at.team_id
