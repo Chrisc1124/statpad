@@ -245,12 +245,17 @@ async def process_query(request: QueryRequest):
             team2 = parsed.get("team2")
             season = parsed.get("season")
             include_game_logs = parsed.get("include_game_logs", False)
-            if not team1 or not team2 or not season:
+            last_n = parsed.get("last_n")
+            if not team1 or not team2:
                 raise HTTPException(
                     status_code=400,
-                    detail="Both team names and season are required"
+                    detail="Both team names are required"
                 )
-            comparison = queries.compare_teams(team1, team2, season, include_game_logs)
+            # Season is optional for team comparisons
+            if not season:
+                # Try to use current season or most recent
+                season = "2023-24"
+            comparison = queries.compare_teams(team1, team2, season, include_game_logs, last_n)
             data = comparison
         
         elif query_type == "team_comparison_game_logs":
@@ -258,6 +263,14 @@ async def process_query(request: QueryRequest):
             team2 = parsed.get("team2")
             season = parsed.get("season")
             last_n = parsed.get("last_n")
+            if not team1 or not team2:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Both team names are required"
+                )
+            # Season is optional for game logs
+            if not season:
+                season = "2023-24"  # Default to most recent season
             comparison = queries.compare_teams(team1, team2, season, True, last_n)
             data = comparison
         
