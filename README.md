@@ -1,15 +1,15 @@
-# 🏀 StatPad
+#  StatPad
 
 NBA Statistics & Analytics Platform - Compare players, teams, and query stats in natural language.
 
-## ✨ Features
+## Features
 
-- 📊 **Player Statistics** - View individual player stats for any season (2015-16 through 2024-25)
-- ⚔️ **Head-to-Head Comparisons** - Compare two players with detailed game logs
-- 🏆 **Team Comparisons** - Compare teams with game-by-game results
-- 💬 **Natural Language Querying** - Ask questions in plain English about NBA stats
+-  **Player Statistics** - View individual player stats for any season (2015-16 through 2024-25)
+-  **Head-to-Head Comparisons** - Compare two players with detailed game logs
+-  **Team Comparisons** - Compare teams with game-by-game results
+-  **Natural Language Querying** - Ask questions in plain English about NBA stats
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 - **Framework**: FastAPI (Python)
@@ -24,7 +24,7 @@ NBA Statistics & Analytics Platform - Compare players, teams, and query stats in
 - **HTTP Client**: Axios
 - **Routing**: React Router DOM
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -158,7 +158,7 @@ statpad/
 
 See API documentation at http://localhost:8000/docs for detailed endpoint information.
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -166,7 +166,7 @@ See API documentation at http://localhost:8000/docs for detailed endpoint inform
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 Commit Message Guidelines
+##  Commit Message Guidelines
 
 We follow conventional commit format:
 
@@ -179,16 +179,16 @@ We follow conventional commit format:
 - `test`: Adding/updating tests
 - `chore`: Maintenance tasks
 
-## 📄 License
+##  License
 
 MIT License
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - NBA API data provided by [nba_api](https://github.com/swar/nba_api)
 - Built with FastAPI, React, and Tailwind CSS
 
 ---
 
-Happy coding! 🚀
+
 
