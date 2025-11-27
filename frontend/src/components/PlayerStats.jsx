@@ -26,11 +26,16 @@ function PlayerStats() {
         setStats(data);
         setError(null);
       } else {
-        setError('Player stats not found');
+        setError(`No stats found for ${playerName} in ${season}. This season may not have data imported yet.`);
       }
     } catch (err) {
       console.error('Error fetching player stats:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to fetch player stats');
+      const errorMsg = err.response?.data?.detail || err.message || 'Failed to fetch player stats';
+      if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+        setError(`No stats found for ${playerName} in ${season}. This season may not have data imported yet.`);
+      } else {
+        setError(errorMsg);
+      }
       setStats(null);
     } finally {
       setLoading(false);
