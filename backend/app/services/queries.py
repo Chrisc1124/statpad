@@ -21,15 +21,22 @@ def get_db_connection():
 
 
 def normalize_season(season: str) -> str:
-    """Normalize season format (e.g., '2022-2023' -> '2022-23')."""
+    """Normalize season format (e.g., '2022-2023' -> '2022-23', '2024-2025' -> '2024-25')."""
+    if not season:
+        return season
+    # Handle both - and / separators
+    season = season.replace('/', '-')
     if '-' in season:
         parts = season.split('-')
         if len(parts) == 2:
             start = parts[0].strip()
             end = parts[1].strip()
-            # Convert full year to short (e.g., 2023 -> 23)
+            # Convert full year to short (e.g., 2023 -> 23, 2025 -> 25)
             if len(end) == 4:
                 end = end[2:]
+            elif len(end) == 2:
+                # Already in short format
+                pass
             return f"{start}-{end}"
     return season
 

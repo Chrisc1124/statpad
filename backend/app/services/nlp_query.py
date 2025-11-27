@@ -22,7 +22,7 @@ def parse_query(query: str) -> Dict[str, Any]:
     query = query.strip()
     query_lower = query.lower()
     
-    # Pattern for season (e.g., "2023-24", "2023-24 season", "2024-2025")
+    # Pattern for season (e.g., "2023-24", "2023-24 season", "2024-2025", "2024/2025")
     season_pattern = r'(\d{4}[-/]\d{2,4})'
     
     # Pattern for "last N games"
@@ -32,15 +32,18 @@ def parse_query(query: str) -> Dict[str, Any]:
     season_match = re.search(season_pattern, query)
     if season_match:
         raw_season = season_match.group(1)
-        # Normalize season format (2024-2025 -> 2024-25)
+        # Normalize season format (2024-2025 -> 2024-25, 2024/2025 -> 2024-25)
         if '-' in raw_season or '/' in raw_season:
             parts = raw_season.replace('/', '-').split('-')
             if len(parts) == 2:
                 start = parts[0].strip()
                 end = parts[1].strip()
-                # Convert full year to short (e.g., 2025 -> 25)
+                # Convert full year to short (e.g., 2025 -> 25, 2024 -> 24)
                 if len(end) == 4:
                     end = end[2:]
+                elif len(end) == 2:
+                    # Already in short format
+                    pass
                 season = f"{start}-{end}"
             else:
                 season = raw_season
@@ -61,7 +64,7 @@ def parse_query(query: str) -> Dict[str, Any]:
     
     team_found = [team for team in team_keywords if team in query_lower]
     if len(team_found) >= 2:
-        # Try team comparison patterns
+        # Try team comparison patterns - handle "last N games" properly
         team_patterns = [
             r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|\s+last|$)',
             r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|\s+last|$)',
@@ -73,6 +76,7 @@ def parse_query(query: str) -> Dict[str, Any]:
                 team1 = match.group(1).strip()
                 team2 = match.group(2).strip()
                 
+                # Check if query has "last N games" - this should be extracted earlier
                 if last_n:
                     return {
                         "type": "team_comparison_game_logs",
