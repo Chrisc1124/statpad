@@ -40,14 +40,16 @@ def parse_query(query: str) -> Dict[str, Any]:
     if re.search(r'how many|what|points|rebounds|assists|stats?|average', query_lower):
         # Try multiple patterns - order matters, most specific first
         patterns = [
-            # "What are X stats in Y" or "X stats in Y"
+            # "What are X stats in Y" - need to exclude "What are" from player name
+            (r'(?:what\s+are|what\s+were)\s+([A-Z][a-zA-Z\s]+?)\s+stats?\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
+            # "X stats in Y" (simple format)
             (r'([A-Z][a-zA-Z\s]+?)\s+stats?\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
-            # "X in Y" or "X for Y"
+            # "X in Y" or "X for Y" (simple format like "Stephen Curry 2018-19")
             (r'([A-Z][a-zA-Z\s]+?)\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
-            # "did X score" or "does X average"
-            (r'(?:did|does|is|was)\s+([A-Z][a-zA-Z\s]+?)(?:\s+(?:score|average|get|have))', False),
-            # "X score in" or "X average in"
-            (r'([A-Z][a-zA-Z\s]+?)\s+(?:score|average|had|has)\s+(?:in|for)', False),
+            # "did X score in Y" or "does X average in Y"
+            (r'(?:did|does|is|was)\s+([A-Z][a-zA-Z\s]+?)(?:\s+(?:score|average|get|have))(?:\s+(?:in|for)\s+(\d{4}[-/]\d{2}))?', True),
+            # "X score in Y" or "X average in Y"
+            (r'([A-Z][a-zA-Z\s]+?)\s+(?:score|average|had|has)(?:\s+(?:in|for)\s+(\d{4}[-/]\d{2}))?', True),
         ]
         
         for pattern, has_season in patterns:
@@ -55,16 +57,18 @@ def parse_query(query: str) -> Dict[str, Any]:
             if player_match:
                 player_name = player_match.group(1).strip()
                 # Extract season if in the match
-                if has_season and len(player_match.groups()) > 1:
+                if has_season and len(player_match.groups()) > 1 and player_match.group(2):
                     extracted_season = player_match.group(2).strip().replace('/', '-')
                     if not season:
                         season = extracted_season
-                return {
-                    "type": "player_stats",
-                    "player_name": player_name,
-                    "season": season,
-                    "original_query": query
-                }
+                # Only return if we have a season (either from pattern or already extracted)
+                if season:
+                    return {
+                        "type": "player_stats",
+                        "player_name": player_name,
+                        "season": season,
+                        "original_query": query
+                    }
     
     # Player comparison - improved pattern matching
     if re.search(r'compare|vs|versus|against', query_lower):
