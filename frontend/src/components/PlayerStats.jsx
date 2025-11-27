@@ -16,9 +16,16 @@ function PlayerStats() {
 
     try {
       const data = await getPlayerStats(playerName, season);
-      setStats(data);
+      if (data) {
+        setStats(data);
+        setError(null);
+      } else {
+        setError('Player stats not found');
+      }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to fetch player stats');
+      console.error('Error fetching player stats:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to fetch player stats');
+      setStats(null);
     } finally {
       setLoading(false);
     }

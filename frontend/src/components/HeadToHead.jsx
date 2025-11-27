@@ -21,10 +21,17 @@ function HeadToHead() {
 
     try {
       const data = await comparePlayers(player1, player2, season);
-      setComparison(data);
-      setViewMode('season');
+      if (data && data.player1 && data.player2) {
+        setComparison(data);
+        setViewMode('season');
+        setError(null);
+      } else {
+        setError('One or both players not found for this season');
+      }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to fetch player comparison');
+      console.error('Error fetching player comparison:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to fetch player comparison');
+      setComparison(null);
     } finally {
       setLoading(false);
     }
@@ -39,10 +46,17 @@ function HeadToHead() {
 
     try {
       const data = await getPlayerGameLogs(player1, player2, season, lastN ? parseInt(lastN) : null);
-      setGameLogs(data);
-      setViewMode('game-logs');
+      if (data && data.game_logs) {
+        setGameLogs(data);
+        setViewMode('game-logs');
+        setError(null);
+      } else {
+        setError('No game logs found for these players');
+      }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to fetch game logs');
+      console.error('Error fetching game logs:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to fetch game logs');
+      setGameLogs(null);
     } finally {
       setLoading(false);
     }
