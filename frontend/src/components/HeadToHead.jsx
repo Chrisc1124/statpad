@@ -11,6 +11,12 @@ function HeadToHead() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('season'); // 'season' or 'game-logs'
+  
+  // Available seasons
+  const seasons = [
+    '2024-25', '2023-24', '2022-23', '2021-22', '2020-21',
+    '2019-20', '2018-19', '2017-18', '2016-17', '2015-16'
+  ];
 
   const handleSeasonComparison = async (e) => {
     e.preventDefault();
@@ -111,15 +117,19 @@ function HeadToHead() {
               <label htmlFor="season" className="block text-sm font-medium text-gray-700 mb-2">
                 Season
               </label>
-              <input
-                type="text"
+              <select
                 id="season"
                 value={season}
                 onChange={(e) => setSeason(e.target.value)}
-                placeholder="e.g., 2023-24"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white"
                 required
-              />
+              >
+                {seasons.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label htmlFor="lastN" className="block text-sm font-medium text-gray-700 mb-2">
