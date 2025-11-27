@@ -15,7 +15,7 @@ BACKEND_ROOT = Path(__file__).parent.parent.parent
 DB_PATH = BACKEND_ROOT / "statpad.db"
 
 # Seasons to import (most recent first for faster testing)
-SEASONS = ["2023-24", "2022-23", "2021-22"]
+SEASONS = ["2023-24", "2022-23", "2021-22", "2020-21", "2019-20", "2018-19", "2017-18", "2016-17", "2015-16"]
 
 
 def get_season_id(cursor, season):

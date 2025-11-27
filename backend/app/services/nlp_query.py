@@ -36,67 +36,64 @@ def parse_query(query: str) -> Dict[str, Any]:
     last_n_match = re.search(last_n_pattern, query_lower)
     last_n = int(last_n_match.group(1)) if last_n_match else None
     
-    # Player stats query
-    if re.search(r'how many|what|points|rebounds|assists|stats?', query_lower):
-        player_match = re.search(r'(?:did|does|is|was)\s+([A-Z][a-zA-Z\s]+?)(?:\s+(?:score|average|get|have))', query)
-        if player_match:
-            player_name = player_match.group(1).strip()
-            return {
-                "type": "player_stats",
-                "player_name": player_name,
-                "season": season,
-                "original_query": query
-            }
-    
-    # Player comparison
-    if re.search(r'compare|vs|versus|against', query_lower):
-        # Extract two player names
-        players_match = re.search(r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)', query, re.IGNORECASE)
-        if players_match:
-            player1 = players_match.group(1).strip()
-            player2 = players_match.group(2).strip()
-            
-            if last_n:
-                return {
-                    "type": "player_comparison_game_logs",
-                    "player1": player1,
-                    "player2": player2,
-                    "season": season,
-                    "last_n": last_n,
-                    "original_query": query
-                }
-            else:
-                return {
-                    "type": "player_comparison",
-                    "player1": player1,
-                    "player2": player2,
-                    "season": season,
-                    "original_query": query
-                }
+    # Player stats query - improved pattern matching
+    if re.search(r'how many|what|points|rebounds|assists|stats?|average', query_lower):
+        # Try multiple patterns
+        patterns = [
+            r'(?:did|does|is|was)\s+([A-Z][a-zA-Z\s]+?)(?:\s+(?:score|average|get|have))',
+            r'([A-Z][a-zA-Z\s]+?)\s+(?:score|average|had|has)\s+(?:in|for)',
+            r'([A-Z][a-zA-Z\s]+?)\s+stats?\s+(?:in|for)',
+            r'([A-Z][a-zA-Z\s]+?)\s+(?:in|for)\s+(\d{4}-\d{2})',
+        ]
         
-        # Try "player1 vs player2" format
-        vs_match = re.search(r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)', query, re.IGNORECASE)
-        if vs_match:
-            player1 = vs_match.group(1).strip()
-            player2 = vs_match.group(2).strip()
-            
-            if last_n:
+        for pattern in patterns:
+            player_match = re.search(pattern, query, re.IGNORECASE)
+            if player_match:
+                player_name = player_match.group(1).strip()
+                # Extract season if in the match
+                if len(player_match.groups()) > 1 and player_match.group(2):
+                    extracted_season = player_match.group(2).strip()
+                    if not season:
+                        season = extracted_season
                 return {
-                    "type": "player_comparison_game_logs",
-                    "player1": player1,
-                    "player2": player2,
-                    "season": season,
-                    "last_n": last_n,
-                    "original_query": query
-                }
-            else:
-                return {
-                    "type": "player_comparison",
-                    "player1": player1,
-                    "player2": player2,
+                    "type": "player_stats",
+                    "player_name": player_name,
                     "season": season,
                     "original_query": query
                 }
+    
+    # Player comparison - improved pattern matching
+    if re.search(r'compare|vs|versus|against', query_lower):
+        # Extract two player names - try multiple patterns
+        patterns = [
+            r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
+            r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
+            r'([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, query, re.IGNORECASE)
+            if match:
+                player1 = match.group(1).strip()
+                player2 = match.group(2).strip()
+                
+                if last_n:
+                    return {
+                        "type": "player_comparison_game_logs",
+                        "player1": player1,
+                        "player2": player2,
+                        "season": season,
+                        "last_n": last_n,
+                        "original_query": query
+                    }
+                else:
+                    return {
+                        "type": "player_comparison",
+                        "player1": player1,
+                        "player2": player2,
+                        "season": season,
+                        "original_query": query
+                    }
     
     # Team comparison
     team_keywords = ['lakers', 'warriors', 'celtics', 'heat', 'bulls', 'knicks', 'nets', 'clippers', 

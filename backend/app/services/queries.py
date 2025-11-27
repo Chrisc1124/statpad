@@ -131,11 +131,31 @@ def get_head_to_head_game_logs(
                 at.team_name as away_team_name,
                 at.team_abbrev as away_team_abbrev,
                 gs1.points as player1_points,
+                gs1.field_goals_made as player1_fgm,
+                gs1.field_goals_attempted as player1_fga,
+                gs1.three_pointers_made as player1_3pm,
+                gs1.three_pointers_attempted as player1_3pa,
+                gs1.free_throws_made as player1_ftm,
+                gs1.free_throws_attempted as player1_fta,
                 gs1.total_rebounds as player1_rebounds,
                 gs1.assists as player1_assists,
+                gs1.steals as player1_steals,
+                gs1.blocks as player1_blocks,
+                gs1.turnovers as player1_turnovers,
+                gs1.plus_minus as player1_plus_minus,
                 gs2.points as player2_points,
+                gs2.field_goals_made as player2_fgm,
+                gs2.field_goals_attempted as player2_fga,
+                gs2.three_pointers_made as player2_3pm,
+                gs2.three_pointers_attempted as player2_3pa,
+                gs2.free_throws_made as player2_ftm,
+                gs2.free_throws_attempted as player2_fta,
                 gs2.total_rebounds as player2_rebounds,
-                gs2.assists as player2_assists
+                gs2.assists as player2_assists,
+                gs2.steals as player2_steals,
+                gs2.blocks as player2_blocks,
+                gs2.turnovers as player2_turnovers,
+                gs2.plus_minus as player2_plus_minus
             FROM games g
             JOIN seasons s ON g.season_id = s.season_id
             JOIN teams ht ON g.home_team_id = ht.team_id
