@@ -200,14 +200,28 @@ def compare_teams(
         # Normalize season format
         normalized_season = normalize_season(season)
         
-        # Get team IDs (case-insensitive)
-        cursor.execute("SELECT team_id FROM teams WHERE LOWER(team_abbrev) = LOWER(?) OR LOWER(team_name) = LOWER(?)", (team1.strip(), team1.strip()))
+        # Get team IDs (case-insensitive, also check if team name contains the search term)
+        team1_search = team1.strip().lower()
+        cursor.execute("""
+            SELECT team_id FROM teams 
+            WHERE LOWER(team_abbrev) = ? 
+            OR LOWER(team_name) = ?
+            OR LOWER(team_name) LIKE ?
+            OR LOWER(team_abbrev) LIKE ?
+        """, (team1_search, team1_search, f'%{team1_search}%', f'%{team1_search}%'))
         team1_row = cursor.fetchone()
         if not team1_row:
             return {"error": f"Team {team1} not found"}
         team1_id = team1_row[0]
         
-        cursor.execute("SELECT team_id FROM teams WHERE LOWER(team_abbrev) = LOWER(?) OR LOWER(team_name) = LOWER(?)", (team2.strip(), team2.strip()))
+        team2_search = team2.strip().lower()
+        cursor.execute("""
+            SELECT team_id FROM teams 
+            WHERE LOWER(team_abbrev) = ? 
+            OR LOWER(team_name) = ?
+            OR LOWER(team_name) LIKE ?
+            OR LOWER(team_abbrev) LIKE ?
+        """, (team2_search, team2_search, f'%{team2_search}%', f'%{team2_search}%'))
         team2_row = cursor.fetchone()
         if not team2_row:
             return {"error": f"Team {team2} not found"}
