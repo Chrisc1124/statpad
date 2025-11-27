@@ -9,9 +9,10 @@ from nba_api.stats.endpoints import leaguedashplayerstats
 from nba_api.stats.static import players
 import time
 
-# Get project root directory
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-DB_PATH = PROJECT_ROOT / "statpad.db"
+# Get database path (database is in backend directory)
+# Script is in backend/app/scripts/, so parent.parent.parent is backend/
+BACKEND_ROOT = Path(__file__).parent.parent.parent
+DB_PATH = BACKEND_ROOT / "statpad.db"
 
 # Seasons to import (most recent first for faster testing)
 SEASONS = ["2023-24", "2022-23", "2021-22"]

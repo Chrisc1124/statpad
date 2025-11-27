@@ -7,9 +7,10 @@ import sqlite3
 from pathlib import Path
 from nba_api.stats.static import teams
 
-# Get project root directory
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-DB_PATH = PROJECT_ROOT / "statpad.db"
+# Get database path (database is in backend directory)
+# Script is in backend/app/scripts/, so parent.parent.parent is backend/
+BACKEND_ROOT = Path(__file__).parent.parent.parent
+DB_PATH = BACKEND_ROOT / "statpad.db"
 
 
 def seed_teams():
