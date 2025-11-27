@@ -139,8 +139,8 @@ def parse_query(query: str) -> Dict[str, Any]:
             (r'(?:did|does|is|was)\s+([A-Z][a-zA-Z\s]+?)(?:\s+(?:score|average|get|have))(?:\s+(?:in|for)\s+(\d{4}[-/]\d{2}))?', True),
             # "X in Y" or "X for Y" (simple format like "Stephen Curry 2018-19")
             (r'^([A-Z][a-zA-Z\s]+?)\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
-            # "X Y" format (e.g., "Stephen Curry 2018-19")
-            (r'^([A-Z][a-zA-Z\s]+?)\s+(\d{4}[-/]\d{2})$', True),
+            # "X Y" format (e.g., "Stephen Curry 2018-19" or "Stephen Curry 2024-2025")
+            (r'^([A-Z][a-zA-Z\s]+?)\s+(\d{4}[-/]\d{2,4})$', True),
             # "X score in Y" or "X average in Y"
             (r'([A-Z][a-zA-Z\s]+?)\s+(?:score|average|had|has)(?:\s+(?:in|for)\s+(\d{4}[-/]\d{2}))?', True),
         ]
