@@ -61,6 +61,7 @@ def import_season_stats(season):
             return
         
         # Convert season to NBA API format (e.g., "2023-24" -> "2023-24")
+        # NBA API uses format like "2024-25" for current season
         season_param = season
         
         print(f"📊 Fetching stats for {season}...")
