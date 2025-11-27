@@ -36,7 +36,40 @@ def parse_query(query: str) -> Dict[str, Any]:
     last_n_match = re.search(last_n_pattern, query_lower)
     last_n = int(last_n_match.group(1)) if last_n_match else None
     
-    # Player stats query - improved pattern matching
+    # Check for comparisons FIRST (before stats queries)
+    if re.search(r'compare|vs|versus|against', query_lower):
+        # Extract two player names - try multiple patterns
+        patterns = [
+            r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
+            r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
+            r'([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, query, re.IGNORECASE)
+            if match:
+                player1 = match.group(1).strip()
+                player2 = match.group(2).strip()
+                
+                if last_n:
+                    return {
+                        "type": "player_comparison_game_logs",
+                        "player1": player1,
+                        "player2": player2,
+                        "season": season,
+                        "last_n": last_n,
+                        "original_query": query
+                    }
+                else:
+                    return {
+                        "type": "player_comparison",
+                        "player1": player1,
+                        "player2": player2,
+                        "season": season,
+                        "original_query": query
+                    }
+    
+    # Player stats query - improved pattern matching (only if not a comparison)
     if re.search(r'how many|what|points|rebounds|assists|stats?|average', query_lower) or season:
         # Try multiple patterns - order matters, most specific first
         patterns = [
