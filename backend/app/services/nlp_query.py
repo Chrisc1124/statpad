@@ -37,17 +37,21 @@ def parse_query(query: str) -> Dict[str, Any]:
     last_n = int(last_n_match.group(1)) if last_n_match else None
     
     # Player stats query - improved pattern matching
-    if re.search(r'how many|what|points|rebounds|assists|stats?|average', query_lower):
+    if re.search(r'how many|what|points|rebounds|assists|stats?|average', query_lower) or season:
         # Try multiple patterns - order matters, most specific first
         patterns = [
             # "What are X stats in Y" - need to exclude "What are" from player name
             (r'(?:what\s+are|what\s+were)\s+([A-Z][a-zA-Z\s]+?)\s+stats?\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
             # "X stats in Y" (simple format)
             (r'([A-Z][a-zA-Z\s]+?)\s+stats?\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
-            # "X in Y" or "X for Y" (simple format like "Stephen Curry 2018-19")
-            (r'([A-Z][a-zA-Z\s]+?)\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
+            # "How many points did X average in Y" - exclude question words
+            (r'how\s+many\s+points\s+did\s+([A-Z][a-zA-Z\s]+?)\s+(?:average|score)\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
             # "did X score in Y" or "does X average in Y"
             (r'(?:did|does|is|was)\s+([A-Z][a-zA-Z\s]+?)(?:\s+(?:score|average|get|have))(?:\s+(?:in|for)\s+(\d{4}[-/]\d{2}))?', True),
+            # "X in Y" or "X for Y" (simple format like "Stephen Curry 2018-19")
+            (r'^([A-Z][a-zA-Z\s]+?)\s+(?:in|for)\s+(\d{4}[-/]\d{2})', True),
+            # "X Y" format (e.g., "Stephen Curry 2018-19")
+            (r'^([A-Z][a-zA-Z\s]+?)\s+(\d{4}[-/]\d{2})$', True),
             # "X score in Y" or "X average in Y"
             (r'([A-Z][a-zA-Z\s]+?)\s+(?:score|average|had|has)(?:\s+(?:in|for)\s+(\d{4}[-/]\d{2}))?', True),
         ]
