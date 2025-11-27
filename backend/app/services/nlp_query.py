@@ -22,27 +22,83 @@ def parse_query(query: str) -> Dict[str, Any]:
     query = query.strip()
     query_lower = query.lower()
     
-    # Pattern for season (e.g., "2023-24", "2023-24 season")
-    season_pattern = r'(\d{4}-\d{2})'
+    # Pattern for season (e.g., "2023-24", "2023-24 season", "2024-2025")
+    season_pattern = r'(\d{4}[-/]\d{2,4})'
     
     # Pattern for "last N games"
     last_n_pattern = r'last\s+(\d+)\s+games?'
     
-    # Extract season
+    # Extract season and normalize it
     season_match = re.search(season_pattern, query)
-    season = season_match.group(1) if season_match else None
+    if season_match:
+        raw_season = season_match.group(1)
+        # Normalize season format (2024-2025 -> 2024-25)
+        if '-' in raw_season or '/' in raw_season:
+            parts = raw_season.replace('/', '-').split('-')
+            if len(parts) == 2:
+                start = parts[0].strip()
+                end = parts[1].strip()
+                # Convert full year to short (e.g., 2025 -> 25)
+                if len(end) == 4:
+                    end = end[2:]
+                season = f"{start}-{end}"
+            else:
+                season = raw_season
+        else:
+            season = raw_season
+    else:
+        season = None
     
     # Extract last_n
     last_n_match = re.search(last_n_pattern, query_lower)
     last_n = int(last_n_match.group(1)) if last_n_match else None
     
-    # Check for comparisons FIRST (before stats queries)
+    # Check for team comparisons FIRST (before player comparisons)
+    team_keywords = ['lakers', 'warriors', 'celtics', 'heat', 'bulls', 'knicks', 'nets', 'clippers', 
+                     'mavericks', 'suns', 'nuggets', 'bucks', '76ers', 'raptors', 'rockets', 'spurs',
+                     'thunder', 'jazz', 'blazers', 'pelicans', 'kings', 'timberwolves', 'pistons',
+                     'hornets', 'magic', 'pacers', 'wizards', 'hawks', 'cavaliers', 'grizzlies']
+    
+    team_found = [team for team in team_keywords if team in query_lower]
+    if len(team_found) >= 2:
+        # Try team comparison patterns
+        team_patterns = [
+            r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|\s+last|$)',
+            r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|\s+last|$)',
+        ]
+        
+        for pattern in team_patterns:
+            match = re.search(pattern, query, re.IGNORECASE)
+            if match:
+                team1 = match.group(1).strip()
+                team2 = match.group(2).strip()
+                
+                if last_n:
+                    return {
+                        "type": "team_comparison_game_logs",
+                        "team1": team1,
+                        "team2": team2,
+                        "season": season,
+                        "last_n": last_n,
+                        "original_query": query
+                    }
+                else:
+                    return {
+                        "type": "team_comparison",
+                        "team1": team1,
+                        "team2": team2,
+                        "season": season,
+                        "include_game_logs": True,
+                        "original_query": query
+                    }
+    
+    # Check for player comparisons (after team check)
     if re.search(r'compare|vs|versus|against', query_lower):
-        # Extract two player names - try multiple patterns
+        # Extract two player names - try multiple patterns, including "last N games"
         patterns = [
-            r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
-            r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
-            r'([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
+            r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|\s+last|$)',
+            r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|\s+last|$)',
+            r'([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|\s+last|$)',
         ]
         
         for pattern in patterns:
@@ -107,96 +163,6 @@ def parse_query(query: str) -> Dict[str, Any]:
                         "original_query": query
                     }
     
-    # Player comparison - improved pattern matching
-    if re.search(r'compare|vs|versus|against', query_lower):
-        # Extract two player names - try multiple patterns
-        patterns = [
-            r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
-            r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
-            r'([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)(?:\s+in|\s+for|$)',
-        ]
-        
-        for pattern in patterns:
-            match = re.search(pattern, query, re.IGNORECASE)
-            if match:
-                player1 = match.group(1).strip()
-                player2 = match.group(2).strip()
-                
-                if last_n:
-                    return {
-                        "type": "player_comparison_game_logs",
-                        "player1": player1,
-                        "player2": player2,
-                        "season": season,
-                        "last_n": last_n,
-                        "original_query": query
-                    }
-                else:
-                    return {
-                        "type": "player_comparison",
-                        "player1": player1,
-                        "player2": player2,
-                        "season": season,
-                        "original_query": query
-                    }
-    
-    # Team comparison
-    team_keywords = ['lakers', 'warriors', 'celtics', 'heat', 'bulls', 'knicks', 'nets', 'clippers', 
-                     'mavericks', 'suns', 'nuggets', 'bucks', '76ers', 'raptors', 'rockets', 'spurs',
-                     'thunder', 'jazz', 'blazers', 'pelicans', 'kings', 'timberwolves', 'pistons',
-                     'hornets', 'magic', 'pacers', 'wizards', 'hawks', 'cavaliers', 'grizzlies']
-    
-    team_found = [team for team in team_keywords if team in query_lower]
-    if len(team_found) >= 2:
-        # Simple team name extraction (this could be improved)
-        team_match = re.search(r'compare\s+([A-Z][a-zA-Z\s]+?)\s+and\s+([A-Z][a-zA-Z\s]+?)', query, re.IGNORECASE)
-        if team_match:
-            team1 = team_match.group(1).strip()
-            team2 = team_match.group(2).strip()
-            
-            if last_n:
-                return {
-                    "type": "team_comparison_game_logs",
-                    "team1": team1,
-                    "team2": team2,
-                    "season": season,
-                    "last_n": last_n,
-                    "original_query": query
-                }
-            else:
-                return {
-                    "type": "team_comparison",
-                    "team1": team1,
-                    "team2": team2,
-                    "season": season,
-                    "include_game_logs": True,
-                    "original_query": query
-                }
-        
-        # Try "team1 vs team2" format
-        vs_match = re.search(r'([A-Z][a-zA-Z\s]+?)\s+(?:vs|versus|against)\s+([A-Z][a-zA-Z\s]+?)', query, re.IGNORECASE)
-        if vs_match:
-            team1 = vs_match.group(1).strip()
-            team2 = vs_match.group(2).strip()
-            
-            if last_n:
-                return {
-                    "type": "team_comparison_game_logs",
-                    "team1": team1,
-                    "team2": team2,
-                    "season": season,
-                    "last_n": last_n,
-                    "original_query": query
-                }
-            else:
-                return {
-                    "type": "team_comparison",
-                    "team1": team1,
-                    "team2": team2,
-                    "season": season,
-                    "include_game_logs": True,
-                    "original_query": query
-                }
     
     # Default: return error
     return {
