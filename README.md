@@ -94,7 +94,7 @@ NBA Statistics & Analytics Platform - Compare players, teams, and query stats in
    python app/scripts/import_league_gamelogs.py
    ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 statpad/
@@ -134,12 +134,12 @@ statpad/
 └── README.md
 ```
 
-## 📚 Documentation
+## Documentation
 
 - [Project Specification](./docs/PROJECT_SPECIFICATION.md) - Detailed project requirements
 - [GitHub Setup Guide](./docs/GITHUB_SETUP.md) - Git workflow and commit guidelines
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Player Stats
 - `GET /players/{player_name}/seasons/{season}` - Get player stats for a season
