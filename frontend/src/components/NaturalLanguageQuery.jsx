@@ -101,7 +101,101 @@ function NaturalLanguageQuery() {
       );
     }
 
-    if ((type === 'player_comparison_game_logs' || type === 'team_comparison_game_logs') && data.game_logs) {
+    if (type === 'player_comparison_game_logs' && data.game_logs) {
+      const player1Name = data.player1 || 'Player 1';
+      const player2Name = data.player2 || 'Player 2';
+      
+      return (
+        <div className="mt-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">
+            Game Logs: {player1Name} vs {player2Name}
+          </h3>
+          {data.game_logs.length > 0 ? (
+            <div className="space-y-6">
+              {data.game_logs.map((game, idx) => {
+                const p1_fg_pct = game.player1_fga > 0 ? ((game.player1_fgm / game.player1_fga) * 100).toFixed(1) : '0.0';
+                const p1_3p_pct = game.player1_3pa > 0 ? ((game.player1_3pm / game.player1_3pa) * 100).toFixed(1) : '0.0';
+                const p1_ft_pct = game.player1_fta > 0 ? ((game.player1_ftm / game.player1_fta) * 100).toFixed(1) : '0.0';
+                const p2_fg_pct = game.player2_fga > 0 ? ((game.player2_fgm / game.player2_fga) * 100).toFixed(1) : '0.0';
+                const p2_3p_pct = game.player2_3pa > 0 ? ((game.player2_3pm / game.player2_3pa) * 100).toFixed(1) : '0.0';
+                const p2_ft_pct = game.player2_fta > 0 ? ((game.player2_ftm / game.player2_fta) * 100).toFixed(1) : '0.0';
+                
+                return (
+                  <div key={idx} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          {new Date(game.game_date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {game.away_team_abbrev || game.away_team_name} @ {game.home_team_abbrev || game.home_team_name} • {game.away_score} - {game.home_score}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Player 1 Stats */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="font-bold text-lg text-gray-900 mb-3">{player1Name}</div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div><span className="text-gray-600">Points:</span> <span className="font-semibold">{game.player1_points || 0}</span></div>
+                          <div><span className="text-gray-600">Rebounds:</span> <span className="font-semibold">{game.player1_rebounds || 0}</span></div>
+                          <div><span className="text-gray-600">Assists:</span> <span className="font-semibold">{game.player1_assists || 0}</span></div>
+                          <div><span className="text-gray-600">Steals:</span> <span className="font-semibold">{game.player1_steals || 0}</span></div>
+                          <div><span className="text-gray-600">Blocks:</span> <span className="font-semibold">{game.player1_blocks || 0}</span></div>
+                          <div><span className="text-gray-600">Turnovers:</span> <span className="font-semibold">{game.player1_turnovers || 0}</span></div>
+                          <div className="col-span-2 border-t border-gray-300 pt-2 mt-1">
+                            <span className="text-gray-600">FG:</span> <span className="font-semibold">{game.player1_fgm || 0}/{game.player1_fga || 0}</span> <span className="text-gray-500">({p1_fg_pct}%)</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-600">3PT:</span> <span className="font-semibold">{game.player1_3pm || 0}/{game.player1_3pa || 0}</span> <span className="text-gray-500">({p1_3p_pct}%)</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-600">FT:</span> <span className="font-semibold">{game.player1_ftm || 0}/{game.player1_fta || 0}</span> <span className="text-gray-500">({p1_ft_pct}%)</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-600">+/-:</span> <span className={`font-semibold ${(game.player1_plus_minus || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{game.player1_plus_minus || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Player 2 Stats */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="font-bold text-lg text-gray-900 mb-3">{player2Name}</div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div><span className="text-gray-600">Points:</span> <span className="font-semibold">{game.player2_points || 0}</span></div>
+                          <div><span className="text-gray-600">Rebounds:</span> <span className="font-semibold">{game.player2_rebounds || 0}</span></div>
+                          <div><span className="text-gray-600">Assists:</span> <span className="font-semibold">{game.player2_assists || 0}</span></div>
+                          <div><span className="text-gray-600">Steals:</span> <span className="font-semibold">{game.player2_steals || 0}</span></div>
+                          <div><span className="text-gray-600">Blocks:</span> <span className="font-semibold">{game.player2_blocks || 0}</span></div>
+                          <div><span className="text-gray-600">Turnovers:</span> <span className="font-semibold">{game.player2_turnovers || 0}</span></div>
+                          <div className="col-span-2 border-t border-gray-300 pt-2 mt-1">
+                            <span className="text-gray-600">FG:</span> <span className="font-semibold">{game.player2_fgm || 0}/{game.player2_fga || 0}</span> <span className="text-gray-500">({p2_fg_pct}%)</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-600">3PT:</span> <span className="font-semibold">{game.player2_3pm || 0}/{game.player2_3pa || 0}</span> <span className="text-gray-500">({p2_3p_pct}%)</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-600">FT:</span> <span className="font-semibold">{game.player2_ftm || 0}/{game.player2_fta || 0}</span> <span className="text-gray-500">({p2_ft_pct}%)</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-600">+/-:</span> <span className={`font-semibold ${(game.player2_plus_minus || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{game.player2_plus_minus || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-600">No game logs found.</p>
+          )}
+        </div>
+      );
+    }
+    
+    if (type === 'team_comparison_game_logs' && data.game_logs) {
       return (
         <div className="mt-6">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Game Logs</h3>
