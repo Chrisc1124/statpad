@@ -122,7 +122,7 @@ def get_head_to_head_game_logs(
         
         # Build query
         query = """
-            SELECT 
+            SELECT DISTINCT
                 g.game_id,
                 g.game_date,
                 g.season_id,
@@ -187,7 +187,16 @@ def get_head_to_head_game_logs(
         cursor.execute(query, params)
         rows = cursor.fetchall()
         
-        return [dict(row) for row in rows]
+        # Additional deduplication by game_id to ensure uniqueness
+        seen_games = {}
+        unique_rows = []
+        for row in rows:
+            game_id = row['game_id']
+            if game_id not in seen_games:
+                seen_games[game_id] = True
+                unique_rows.append(row)
+        
+        return [dict(row) for row in unique_rows[:last_n] if last_n else unique_rows]
     finally:
         conn.close()
 
