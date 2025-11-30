@@ -122,6 +122,7 @@ def get_head_to_head_game_logs(
         
         # Build query - use subqueries to get only one game_stat per player per game
         # This handles cases where players have multiple game_stat entries (e.g., trades)
+        # Use MAX(game_stat_id) to get the most recent entry for each player per game
         query = """
             SELECT 
                 g.game_id,
@@ -168,26 +169,20 @@ def get_head_to_head_game_logs(
             JOIN seasons s ON g.season_id = s.season_id
             JOIN teams ht ON g.home_team_id = ht.team_id
             JOIN teams at ON g.away_team_id = at.team_id
-            JOIN (
-                SELECT game_id, player_id, team_id,
-                    points, field_goals_made, field_goals_attempted,
-                    three_pointers_made, three_pointers_attempted,
-                    free_throws_made, free_throws_attempted,
-                    total_rebounds, assists, steals, blocks, turnovers, plus_minus,
-                    ROW_NUMBER() OVER (PARTITION BY game_id, player_id ORDER BY game_stat_id DESC) as rn
-                FROM game_stats
-                WHERE player_id = ?
-            ) gs1 ON g.game_id = gs1.game_id AND gs1.rn = 1
-            JOIN (
-                SELECT game_id, player_id, team_id,
-                    points, field_goals_made, field_goals_attempted,
-                    three_pointers_made, three_pointers_attempted,
-                    free_throws_made, free_throws_attempted,
-                    total_rebounds, assists, steals, blocks, turnovers, plus_minus,
-                    ROW_NUMBER() OVER (PARTITION BY game_id, player_id ORDER BY game_stat_id DESC) as rn
-                FROM game_stats
-                WHERE player_id = ?
-            ) gs2 ON g.game_id = gs2.game_id AND gs2.rn = 1
+            JOIN game_stats gs1 ON g.game_id = gs1.game_id 
+                AND gs1.player_id = ?
+                AND gs1.game_stat_id = (
+                    SELECT MAX(game_stat_id) 
+                    FROM game_stats 
+                    WHERE game_id = g.game_id AND player_id = ?
+                )
+            JOIN game_stats gs2 ON g.game_id = gs2.game_id 
+                AND gs2.player_id = ?
+                AND gs2.game_stat_id = (
+                    SELECT MAX(game_stat_id) 
+                    FROM game_stats 
+                    WHERE game_id = g.game_id AND player_id = ?
+                )
             WHERE (gs1.team_id != gs2.team_id)
         """
         
