@@ -120,9 +120,10 @@ def get_head_to_head_game_logs(
             return []
         player2_id = player2_row[0]
         
-        # Build query
+        # Build query - use subqueries to get only one game_stat per player per game
+        # This handles cases where players have multiple game_stat entries (e.g., trades)
         query = """
-            SELECT DISTINCT
+            SELECT 
                 g.game_id,
                 g.game_date,
                 g.season_id,
@@ -167,12 +168,30 @@ def get_head_to_head_game_logs(
             JOIN seasons s ON g.season_id = s.season_id
             JOIN teams ht ON g.home_team_id = ht.team_id
             JOIN teams at ON g.away_team_id = at.team_id
-            JOIN game_stats gs1 ON g.game_id = gs1.game_id AND gs1.player_id = ?
-            JOIN game_stats gs2 ON g.game_id = gs2.game_id AND gs2.player_id = ?
+            JOIN (
+                SELECT game_id, player_id, team_id,
+                    points, field_goals_made, field_goals_attempted,
+                    three_pointers_made, three_pointers_attempted,
+                    free_throws_made, free_throws_attempted,
+                    total_rebounds, assists, steals, blocks, turnovers, plus_minus,
+                    ROW_NUMBER() OVER (PARTITION BY game_id, player_id ORDER BY game_stat_id DESC) as rn
+                FROM game_stats
+                WHERE player_id = ?
+            ) gs1 ON g.game_id = gs1.game_id AND gs1.rn = 1
+            JOIN (
+                SELECT game_id, player_id, team_id,
+                    points, field_goals_made, field_goals_attempted,
+                    three_pointers_made, three_pointers_attempted,
+                    free_throws_made, free_throws_attempted,
+                    total_rebounds, assists, steals, blocks, turnovers, plus_minus,
+                    ROW_NUMBER() OVER (PARTITION BY game_id, player_id ORDER BY game_stat_id DESC) as rn
+                FROM game_stats
+                WHERE player_id = ?
+            ) gs2 ON g.game_id = gs2.game_id AND gs2.rn = 1
             WHERE (gs1.team_id != gs2.team_id)
         """
         
-        params = [player1_id, player2_id]
+        params = [player1_id, player1_id, player2_id, player2_id]
         
         if normalized_season:
             query += " AND s.season = ?"
@@ -187,16 +206,7 @@ def get_head_to_head_game_logs(
         cursor.execute(query, params)
         rows = cursor.fetchall()
         
-        # Additional deduplication by game_id to ensure uniqueness
-        seen_games = {}
-        unique_rows = []
-        for row in rows:
-            game_id = row['game_id']
-            if game_id not in seen_games:
-                seen_games[game_id] = True
-                unique_rows.append(row)
-        
-        return [dict(row) for row in unique_rows[:last_n] if last_n else unique_rows]
+        return [dict(row) for row in rows]
     finally:
         conn.close()
 
