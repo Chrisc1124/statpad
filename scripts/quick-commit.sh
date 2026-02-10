@@ -24,3 +24,7 @@ else
     echo "✅ Committed: $COMMIT_MSG (no remote configured)"
 fi
 
+
+
+
+

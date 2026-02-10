@@ -95,7 +95,7 @@ def parse_query(query: str) -> Dict[str, Any]:
                         "include_game_logs": True,
                         "original_query": query
                     }
-    
+        
     # Check for player comparisons (after team check)
     if re.search(r'compare|vs|versus|against', query_lower):
         # Extract two player names - try multiple patterns, including "last N games"
@@ -163,9 +163,9 @@ def parse_query(query: str) -> Dict[str, Any]:
                     return {
                         "type": "player_stats",
                         "player_name": player_name,
-                        "season": season,
-                        "original_query": query
-                    }
+                    "season": season,
+                    "original_query": query
+                }
     
     
     # Default: return error
