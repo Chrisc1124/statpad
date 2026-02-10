@@ -43,6 +43,23 @@ function NaturalLanguageQuery() {
     return value;
   };
 
+  const formatPercentage = (value) => {
+    if (value === null || value === undefined) return 'N/A';
+    if (typeof value === 'number') {
+      // Percentages are stored as decimals (0.4 = 40%), so multiply by 100
+      return (value * 100).toFixed(1);
+    }
+    return value;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    // Parse date string (YYYY-MM-DD) as local date to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
   const renderResult = () => {
     if (!result) return null;
 
@@ -68,7 +85,7 @@ function NaturalLanguageQuery() {
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="text-sm text-gray-600">FG%</div>
-              <div className="text-2xl font-bold text-primary-600">{formatStat(stats.field_goal_percentage)}%</div>
+              <div className="text-2xl font-bold text-primary-600">{formatPercentage(stats.field_goal_percentage)}%</div>
             </div>
           </div>
         </div>
@@ -125,7 +142,7 @@ function NaturalLanguageQuery() {
                     <div className="flex justify-between items-center mb-4">
                       <div>
                         <div className="font-semibold text-gray-900">
-                          {new Date(game.game_date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                          {formatDate(game.game_date)}
                         </div>
                         <div className="text-sm text-gray-600">
                           {game.away_team_abbrev || game.away_team_name} @ {game.home_team_abbrev || game.home_team_name} • {game.away_score} - {game.home_score}
@@ -195,39 +212,61 @@ function NaturalLanguageQuery() {
       );
     }
     
-    if (type === 'team_comparison_game_logs' && data.game_logs) {
+    if (type === 'team_comparison' || type === 'team_comparison_game_logs') {
+      const team1 = data.team1 || 'Team 1';
+      const team2 = data.team2 || 'Team 2';
+      const season = data.season || '';
+      const gameLogs = data.game_logs || [];
+      
       return (
         <div className="mt-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Game Logs</h3>
-          {data.game_logs.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matchup</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {data.game_logs.slice(0, 10).map((game, idx) => (
-                    <tr key={idx}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(game.game_date).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {game.away_team_abbrev || game.away_team_name} @ {game.home_team_abbrev || game.home_team_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {game.away_score} - {game.home_score}
-                      </td>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">
+            {team1} vs {team2} {season ? `- ${season}` : ''}
+          </h3>
+          
+          {gameLogs.length > 0 ? (
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-gray-800 mb-3">Game Logs</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matchup</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Result</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {gameLogs.map((game, idx) => {
+                      const isHomeWin = game.home_win === 1 || game.home_win === true;
+                      const winner = isHomeWin ? (game.home_team_abbrev || game.home_team_name) : (game.away_team_abbrev || game.away_team_name);
+                      
+                      return (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatDate(game.game_date)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {game.away_team_abbrev || game.away_team_name} @ {game.home_team_abbrev || game.home_team_name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {game.away_score} - {game.home_score}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`font-semibold ${isHomeWin ? 'text-green-600' : 'text-blue-600'}`}>
+                              {winner} won
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
-            <p className="text-gray-600">No game logs found.</p>
+            <p className="text-gray-600">No game logs found for these teams in {season || 'the specified season'}.</p>
           )}
         </div>
       );

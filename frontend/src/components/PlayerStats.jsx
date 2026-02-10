@@ -50,6 +50,15 @@ function PlayerStats() {
     return value;
   };
 
+  const formatPercentage = (value) => {
+    if (value === null || value === undefined) return 'N/A';
+    if (typeof value === 'number') {
+      // Percentages are stored as decimals (0.4 = 40%), so multiply by 100
+      return (value * 100).toFixed(1);
+    }
+    return value;
+  };
+
   return (
     <div className="px-4 py-6">
       <h2 className="text-3xl font-bold text-gray-900 mb-6">Player Statistics</h2>
@@ -147,15 +156,15 @@ function PlayerStats() {
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Field Goal %</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatStat(stats.field_goal_percentage)}%</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPercentage(stats.field_goal_percentage)}%</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">3-Point %</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatStat(stats.three_point_percentage)}%</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPercentage(stats.three_point_percentage)}%</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Free Throw %</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatStat(stats.free_throw_percentage)}%</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPercentage(stats.free_throw_percentage)}%</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Steals/Game</td>

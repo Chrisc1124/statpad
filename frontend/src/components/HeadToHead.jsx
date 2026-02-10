@@ -76,6 +76,23 @@ function HeadToHead() {
     return value;
   };
 
+  const formatPercentage = (value) => {
+    if (value === null || value === undefined) return 'N/A';
+    if (typeof value === 'number') {
+      // Percentages are stored as decimals (0.4 = 40%), so multiply by 100
+      return (value * 100).toFixed(1);
+    }
+    return value;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    // Parse date string (YYYY-MM-DD) as local date to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
   return (
     <div className="px-4 py-6">
       <h2 className="text-3xl font-bold text-gray-900 mb-6">Head-to-Head Comparison</h2>
@@ -210,7 +227,7 @@ function HeadToHead() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">FG%:</span>
-                    <span className="font-bold">{formatStat(comparison.player1.field_goal_percentage)}%</span>
+                    <span className="font-bold">{formatPercentage(comparison.player1.field_goal_percentage)}%</span>
                   </div>
                 </div>
               </div>
@@ -233,7 +250,7 @@ function HeadToHead() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">FG%:</span>
-                    <span className="font-bold">{formatStat(comparison.player2.field_goal_percentage)}%</span>
+                    <span className="font-bold">{formatPercentage(comparison.player2.field_goal_percentage)}%</span>
                   </div>
                 </div>
               </div>
@@ -263,7 +280,7 @@ function HeadToHead() {
                     <div className="flex justify-between items-center mb-4">
                       <div>
                         <div className="font-semibold text-gray-900">
-                          {new Date(game.game_date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                          {formatDate(game.game_date)}
                         </div>
                         <div className="text-sm text-gray-600">
                           {game.away_team_abbrev} @ {game.home_team_abbrev} • {game.away_score} - {game.home_score}
